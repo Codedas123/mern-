@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const bcrypt = require('bcryptjs')
-
+const jwt = require('jsonwebtoken')
 
 
 require('../db/conn')
@@ -84,6 +84,8 @@ router.post('/register' , async (req , res) =>{
 router.post('/signin' , async(req , res) =>{
     const {email , password} = req.body
 
+    let token
+
     if (!email || !password){
         return res.status(422).json({error : 'Plz fill require filled'})
     }
@@ -93,6 +95,15 @@ router.post('/signin' , async(req , res) =>{
 
         if(userLogin){
             const isMatch = await bcrypt.compare(password , userLogin.password)
+
+            token = await userLogin.generateAuthToken()
+
+            console.log(token)
+
+            res.cookie("jwttoken" , token ,{
+                expires : new Date(Date.now() + 25892000000),
+                httpOnly : true
+            })
 
             if(isMatch){
                 return res.status(201).json({message : 'Login Succesful'})
