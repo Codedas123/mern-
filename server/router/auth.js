@@ -1,5 +1,7 @@
 const express = require('express')
 const router = express.Router()
+const bcrypt = require('bcryptjs')
+
 
 
 require('../db/conn')
@@ -55,17 +57,23 @@ router.post('/register' , async (req , res) =>{
         if(userExist){
             return res.status(422).json({error : 'Email already Exist.'})
         }
-
-        const user = new User({name , email , phone , work , password , cpassword})
-
-        const userRegister = await user.save()
-
-        if(userRegister) {
-            res.status(201).json({message: "user registerd successfully"})
+        else if(password != cpassword){
+            return res.status(422).json({error : 'Password is not matching!'})
         }
         else{
-            res.status(500).json({error : "Failed to register"})
+            const user = new User({name , email , phone , work , password , cpassword})
+
+            const userRegister = await user.save()
+
+            if(userRegister) {
+                res.status(201).json({message: "user registerd successfully"})
+            }
+            else{
+                res.status(500).json({error : "Failed to register"})
+            }
         }
+
+        
     }
 
     catch(err){
@@ -84,11 +92,20 @@ router.post('/signin' , async(req , res) =>{
         const userLogin = await User.findOne({email : email})
 
         if(userLogin){
-            return res.status(201).json({message : 'Login Succesful'})
+            const isMatch = await bcrypt.compare(password , userLogin.password)
+
+            if(isMatch){
+                return res.status(201).json({message : 'Login Succesful'})
+            }
+            else{
+                res.status(500).json({error : "Invalid Credetial"})
+            }
         }
         else{
             res.status(500).json({error : "Invalid Credetial"})
         }
+
+        
     }
 
     catch(err) {
