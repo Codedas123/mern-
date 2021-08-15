@@ -10,7 +10,38 @@ router.get('/' , (req , res) =>{
     res.send("Hello Wolrd from Express Router")
 })
 
-router.post('/register' , (req , res) =>{
+// Using Promises
+
+// router.post('/register' , (req , res) =>{
+
+//     const {name , email , phone , work , password , cpassword} = req.body
+
+//     if (!name || !email || !phone || !work || !password || !cpassword){
+//         return res.status(422).json({error : 'Plz fill require filled'})
+//     }
+
+//     User.findOne({email : email})
+//     .then((userExist) => {
+//         if (userExist){
+//             return res.status(422).json({error : 'Email already Exist.'})
+//         }
+
+//         const user = new User({name , email , phone , work , password , cpassword})
+
+//         user.save()
+//         .then(() =>{
+//             res.status(201).json({message: "user registerd successfully"})
+//         })
+//         .catch((err) => res.status(500).json({error : "Failed to register"}))
+//     }).catch(err => {
+//         console.log(error)
+//     })
+   
+// })
+
+// Using async
+
+router.post('/register' , async (req , res) =>{
 
     const {name , email , phone , work , password , cpassword} = req.body
 
@@ -18,23 +49,54 @@ router.post('/register' , (req , res) =>{
         return res.status(422).json({error : 'Plz fill require filled'})
     }
 
-    User.findOne({email : email})
-    .then((userExist) => {
-        if (userExist){
+    try {
+        const userExist = await User.findOne({email : email})
+
+        if(userExist){
             return res.status(422).json({error : 'Email already Exist.'})
         }
 
         const user = new User({name , email , phone , work , password , cpassword})
 
-        user.save()
-        .then(() =>{
+        const userRegister = await user.save()
+
+        if(userRegister) {
             res.status(201).json({message: "user registerd successfully"})
-        })
-        .catch((err) => res.status(500).json({error : "Failed to register"}))
-    }).catch(err => {
-        console.log(error)
-    })
-   
+        }
+        else{
+            res.status(500).json({error : "Failed to register"})
+        }
+    }
+
+    catch(err){
+        console.log(err)
+    }   
 })
+
+router.post('/signin' , async(req , res) =>{
+    const {email , password} = req.body
+
+    if (!email || !password){
+        return res.status(422).json({error : 'Plz fill require filled'})
+    }
+
+    try{
+        const userLogin = await User.findOne({email : email})
+
+        if(userLogin){
+            return res.status(201).json({message : 'Login Succesful'})
+        }
+        else{
+            res.status(500).json({error : "Invalid Credetial"})
+        }
+    }
+
+    catch(err) {
+        console.log(err)
+    }
+})
+
+
+
 
 module.exports = router
